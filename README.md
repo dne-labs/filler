@@ -83,6 +83,12 @@ The benchmark compares CPU INT8 and FP32 on the same clip; it records model load
 
 The old Python application has been replaced by TypeScript; `python -m filler` is no longer the entry point.
 
+## Contributing
+
+Contributions are welcome. Good starting points include tests with consented or public multi-speaker audio, diarization evaluation, transcript-review UX, latency improvements, documentation, and reproducible bug reports.
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Please open an issue first for large architecture changes. Never commit API keys, Hugging Face tokens, private meeting audio, participant names, transcripts, model caches, or generated output containing private data.
+
 ## Limits and next work
 
 The current audio path downmixes the first stream to mono 16kHz and records source channel metadata; the original file is not modified. Separate-microphone processing remains future work. Limits: two-hour input, 30-minute worker timeout, 32MB captured worker output. The CLI and localhost-only meeting server are not a secured multi-user service. Keep consented recordings, names, tokens, and private transcripts out of git.
