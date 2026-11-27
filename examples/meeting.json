@@ -1,0 +1,72 @@
+{
+  "title": "Synthetic fixture — launch planning",
+  "speakers": {
+    "S1": "Alex (fictional)",
+    "S2": "Sam (fictional)"
+  },
+  "segments": [
+    {
+      "id": "s1",
+      "start": 0,
+      "end": 4,
+      "speaker": "S1",
+      "text": "I propose launching Friday."
+    },
+    {
+      "id": "s2",
+      "start": 3,
+      "end": 6,
+      "speaker": "S2",
+      "text": "I disagree. The load test is not finished."
+    },
+    {
+      "id": "s3",
+      "start": 6,
+      "end": 10,
+      "speaker": "S2",
+      "text": "I will run the load test tomorrow."
+    },
+    {
+      "id": "s4",
+      "start": 10,
+      "end": 13,
+      "speaker": null,
+      "text": "Let us revisit the date after testing."
+    }
+  ],
+  "insights": [
+    {
+      "id": "i1",
+      "kind": "disagreement",
+      "text": "Sam objects to the proposed Friday launch.",
+      "owner": null,
+      "evidence": [
+        "s1",
+        "s2"
+      ],
+      "status": "suggested"
+    },
+    {
+      "id": "i2",
+      "kind": "action",
+      "text": "Run the load test tomorrow (relative date unresolved).",
+      "owner": "S2",
+      "evidence": [
+        "s3"
+      ],
+      "status": "suggested"
+    },
+    {
+      "id": "i3",
+      "kind": "unresolved",
+      "text": "Launch date remains unresolved.",
+      "owner": null,
+      "evidence": [
+        "s1",
+        "s2",
+        "s4"
+      ],
+      "status": "suggested"
+    }
+  ]
+}
