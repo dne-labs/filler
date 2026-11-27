@@ -1,0 +1,88 @@
+{
+  "audioSha256": "63a4b1e4c1dc655ac70961ffbf518acd249df237e5a0152faae9a4a836949715",
+  "cpu": "AMD EPYC 7763 64-Core Processor",
+  "node": "v24.22.3",
+  "runs": [
+    {
+      "computeType": "int8",
+      "duration": 11,
+      "hypothesis": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country.",
+      "errors": 0,
+      "referenceWords": 22,
+      "hypothesisWords": 22,
+      "wer": 0,
+      "metadata": {
+        "asrModel": "Systran/faster-whisper-tiny.en",
+        "requestedRevision": "main",
+        "resolvedRevision": "0d3d19a32d3338f10357c0889762bd8d64bbdeba",
+        "device": "cpu",
+        "computeType": "int8",
+        "cpuThreads": 4,
+        "beamSize": 1,
+        "vadFilter": false,
+        "language": "en",
+        "droppedInvalidWords": 0,
+        "modelLoadSeconds": 5.718388662999928,
+        "asrSeconds": 0.5739381620001041,
+        "workerSeconds": 6.30212178499994,
+        "workerRtf": 0.5729201622727218,
+        "diarization": {
+          "status": "not-requested"
+        },
+        "python": "3.12.14",
+        "machine": "x86_64",
+        "packages": {
+          "faster-whisper": "1.2.1",
+          "ctranslate2": "4.9.1",
+          "huggingface-hub": "2.5.0",
+          "numpy": "2.5.5"
+        },
+        "sourceChannels": 2,
+        "sourceSampleRate": 44100,
+        "normalization": "first audio stream; mono 16kHz PCM; original unmodified",
+        "pipelineSeconds": 7.20484173
+      }
+    },
+    {
+      "computeType": "float32",
+      "duration": 11,
+      "hypothesis": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country",
+      "errors": 0,
+      "referenceWords": 22,
+      "hypothesisWords": 22,
+      "wer": 0,
+      "metadata": {
+        "asrModel": "Systran/faster-whisper-tiny.en",
+        "requestedRevision": "main",
+        "resolvedRevision": "0d3d19a32d3338f10357c0889762bd8d64bbdeba",
+        "device": "cpu",
+        "computeType": "float32",
+        "cpuThreads": 4,
+        "beamSize": 1,
+        "vadFilter": false,
+        "language": "en",
+        "droppedInvalidWords": 0,
+        "modelLoadSeconds": 5.5443305919999375,
+        "asrSeconds": 0.7140165330000627,
+        "workerSeconds": 6.279601409999941,
+        "workerRtf": 0.5708728554545401,
+        "diarization": {
+          "status": "not-requested"
+        },
+        "python": "3.12.14",
+        "machine": "x86_64",
+        "packages": {
+          "faster-whisper": "1.2.1",
+          "ctranslate2": "4.9.1",
+          "huggingface-hub": "2.5.0",
+          "numpy": "2.5.5"
+        },
+        "sourceChannels": 2,
+        "sourceSampleRate": 44100,
+        "normalization": "first audio stream; mono 16kHz PCM; original unmodified",
+        "pipelineSeconds": 7.109728026
+      }
+    }
+  ],
+  "scope": "Single English public-speech clip, CPU ASR only. Sequential cold worker processes; snapshot resolution/cache and model load grouped separately from ASR. No speaker or overlap accuracy measured. Not a general speedup claim."
+}

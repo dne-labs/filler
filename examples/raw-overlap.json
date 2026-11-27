@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "duration": 5,
+  "words": [
+    {"id": "w0", "start": 0.2, "end": 0.6, "text": "Ship"},
+    {"id": "w1", "start": 1.2, "end": 1.8, "text": "Friday?"},
+    {"id": "w2", "start": 3.2, "end": 3.8, "text": "Wait."}
+  ],
+  "turns": [
+    {"start": 0, "end": 2, "speaker": "S1"},
+    {"start": 1, "end": 4, "speaker": "S2"}
+  ],
+  "metadata": {"source": "synthetic timestamps; no model inference"}
+}

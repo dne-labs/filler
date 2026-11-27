@@ -14,14 +14,14 @@ Every insight includes a kind, text, evidence segment IDs, optional owner, and r
 
 ## Phases and completion gates
 
-### 0 — Contracts and reproducible fixture (this commit)
+### 0 — Contracts and reproducible fixture (implemented in TypeScript)
 - Structured meeting JSON; anonymous or unknown speakers; overlapping turns.
 - Action, decision, disagreement, consensus, and unresolved insight types.
 - Reference validation, Markdown report, synthetic demo, regression tests.
 - Gate: local tests pass; demo explicitly labelled synthetic.
 
-### 1 — Recorded-audio baseline (next)
-- Python inference worker with replaceable ASR and diarization adapters; choose and pin model/package revisions after compatibility checks.
+### 1 — Recorded-audio baseline (in progress)
+- TypeScript CLI, audio preparation, validation, alignment, reports, and evaluation. Python is confined to speech model inference. ASR adapter implemented; optional diarization adapter awaits gated-model validation.
 - Candidate experiments: Whisper-family ASR and pyannote diarization; evaluate alternatives before selecting defaults.
 - Normalize audio without losing channel provenance; export word timestamps and speaker turns separately.
 - Align words against turns; retain unknown/ambiguous assignments in overlaps.
@@ -40,7 +40,7 @@ Every insight includes a kind, text, evidence segment IDs, optional owner, and r
 - Gate: manually annotated insight precision/recall, owner accuracy, unsupported-claim rate, and evidence correctness on held-out meetings.
 
 ### 4 — Streaming and review UI
-- FastAPI session API and WebSocket events; Next.js/TypeScript review dashboard.
+- Express/TypeScript session API and WebSocket events; Next.js/TypeScript review dashboard. Keep the Python model worker behind the TypeScript service.
 - Sequence-numbered audio chunks, bounded queues, reconnect/replay, partial/final transcript revisions, speaker corrections, evidence playback.
 - Separate live provisional output from slower finalized reconciliation.
 - Gate: replay tests for duplicate/missing/out-of-order chunks and speaker changes; p50/p95 partial and final latency under concurrent sessions.
@@ -53,7 +53,7 @@ Every insight includes a kind, text, evidence segment IDs, optional owner, and r
 
 Report WER plus speaker-attributed transcription errors; diarization error rate with overlap included and explicit collar/scoring settings. Freeze reference annotations, split by meeting/room/speaker to reduce leakage, and record alignment and speaker-permutation conventions. WER alone cannot establish correct attribution. Keep overlap-only and overall results separate.
 
-Track real-time factor (processing seconds / audio seconds), p50/p95 latency, peak VRAM, and compute cost per audio hour (GPU hourly price × GPU processing hours / audio hours, plus other billed services). Define hardware and concurrency for every result. Numerical acceptance thresholds will be set after the baseline and annotated dataset exist; no benchmark has run yet.
+Track real-time factor (processing seconds / audio seconds), p50/p95 latency, peak VRAM, and compute cost per audio hour (GPU hourly price × GPU processing hours / audio hours, plus other billed services). Define hardware and concurrency for every result. Numerical acceptance thresholds will be set after a representative annotated dataset exists. See experiments/results and docs/EXPERIMENTS.md for the limited baseline experiments actually run.
 
 ## Data handling
 

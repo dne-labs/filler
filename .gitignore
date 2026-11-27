@@ -9,3 +9,6 @@ outputs/
 *.wav
 *.mp3
 *.mp4
+node_modules/
+dist/
+*.flac
