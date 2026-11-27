@@ -4,6 +4,10 @@ Meeting intelligence for noisy, overlapping conversations — DNE Labs.
 
 **TypeScript first. Python only for speech models.** Target: speaker-labelled transcripts and evidence-linked action items, decisions, disagreements, consensus, and unresolved questions for 4–8-person meetings.
 
+## Live meeting screen
+
+Run `npm run web:build` then `npm start` and open http://localhost:3000. See [live setup](docs/LIVE.md) for microphone capture, optional diarization, and AI endpoint configuration. The near-live prototype refreshes cumulative audio snapshots; it is not a production streaming engine.
+
 ## What works now
 
 - TypeScript CLI for recorded audio, FFmpeg normalization, schema validation, overlap-aware word attribution, and Markdown reports with evidence links.
@@ -11,7 +15,7 @@ Meeting intelligence for noisy, overlapping conversations — DNE Labs.
 - Optional pyannote Community-1 adapter retaining overlapping speaker turns. **Requires gated model access and has not yet been end-to-end tested here.**
 - Regression tests, synthetic attribution experiment, and CPU ASR experiment tooling.
 
-This is a recorded-audio research baseline. No live streaming, UI, automatic insight extraction, speech separation, or validated noisy 4–8-speaker performance yet. Whisper alone does not reliably recover every simultaneous voice. Unknown speakers stay unknown; timestamps are not calibrated confidence scores. The example meeting insights are manually authored.
+Includes a local meeting UI and configurable AI insight/name-suggestion adapter. True streaming, speech separation, and validated noisy 4–8-speaker performance are not implemented. Whisper alone does not reliably recover every simultaneous voice. Unknown speakers stay unknown; timestamps are not calibrated confidence scores. The example meeting insights are manually authored.
 
 ## Quick start (Node 22+)
 
@@ -81,6 +85,6 @@ The old Python application has been replaced by TypeScript; `python -m filler` i
 
 ## Limits and next work
 
-The current audio path downmixes the first stream to mono 16kHz and records source channel metadata; the original file is not modified. Separate-microphone processing remains future work. Limits: two-hour input, 30-minute worker timeout, 32MB captured worker output. This is a local CLI, not a secured multi-user server. Keep consented recordings, names, tokens, and private transcripts out of git.
+The current audio path downmixes the first stream to mono 16kHz and records source channel metadata; the original file is not modified. Separate-microphone processing remains future work. Limits: two-hour input, 30-minute worker timeout, 32MB captured worker output. The CLI and localhost-only meeting server are not a secured multi-user service. Keep consented recordings, names, tokens, and private transcripts out of git.
 
 Next: validate diarization on an annotated multi-speaker recording, measure word/speaker errors in overlap, then add evidence-grounded reasoning and an Express/Next.js review UI. [Full plan](docs/PLAN.md).

@@ -1,0 +1,11 @@
+{
+  "scope": "Real HTTP smoke test, public JFK speech fixture. ASR only; no microphone, diarization or LLM.",
+  "uiStatus": 200,
+  "audioStatus": 200,
+  "words": 22,
+  "unknownSpeakers": 22,
+  "aiStatus": "AI not configured: set FILLER_LLM_URL and FILLER_LLM_MODEL",
+  "staleStatus": 409,
+  "foreignOriginStatus": 403,
+  "deleteStatus": 204
+}

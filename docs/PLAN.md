@@ -39,8 +39,9 @@ Every insight includes a kind, text, evidence segment IDs, optional owner, and r
 - Revalidate insights when transcripts or speaker mappings are corrected.
 - Gate: manually annotated insight precision/recall, owner accuracy, unsupported-claim rate, and evidence correctness on held-out meetings.
 
-### 4 — Streaming and review UI
-- Express/TypeScript session API and WebSocket events; Next.js/TypeScript review dashboard. Keep the Python model worker behind the TypeScript service.
+### 4 — Streaming and review UI (near-live local prototype implemented)
+- Implemented: Express/TypeScript localhost session API and a TypeScript browser dashboard using cumulative WAV snapshots over HTTP. AI notes and contextual name hypotheses use a configurable compatible model endpoint. See docs/LIVE.md.
+- Still planned: persistent model workers, true streaming events, rolling context, and a production review dashboard. Keep Python behind the TypeScript service.
 - Sequence-numbered audio chunks, bounded queues, reconnect/replay, partial/final transcript revisions, speaker corrections, evidence playback.
 - Separate live provisional output from slower finalized reconciliation.
 - Gate: replay tests for duplicate/missing/out-of-order chunks and speaker changes; p50/p95 partial and final latency under concurrent sessions.
