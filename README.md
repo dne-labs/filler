@@ -12,7 +12,7 @@ Run `npm run web:build` then `npm start` and open http://localhost:3000. See [li
 
 - TypeScript CLI for recorded audio, FFmpeg normalization, schema validation, overlap-aware word attribution, and Markdown reports with evidence links.
 - Python subprocess running faster-whisper with word timestamps, model revision capture, stage timing, and CPU/GPU options.
-- Optional pyannote Community-1 adapter retaining overlapping speaker turns. **Requires gated model access and has not yet been end-to-end tested here.**
+- Optional pyannote Community-1 adapter retaining overlapping speaker turns, plus reviewable creator voice enrollment and active-speaker counting. **Requires gated model access and has not yet been end-to-end tested here.**
 - Regression tests, synthetic attribution experiment, and CPU ASR experiment tooling.
 
 Includes a local meeting UI and configurable AI insight/name-suggestion adapter. True streaming, speech separation, and validated noisy 4–8-speaker performance are not implemented. Whisper alone does not reliably recover every simultaneous voice. Unknown speakers stay unknown; timestamps are not calibrated confidence scores. The example meeting insights are manually authored.
@@ -56,7 +56,7 @@ npm run transcribe -- /absolute/path/meeting.wav \
   --out outputs/meeting-diarized --python .venv/bin/python --diarize --speakers 4
 ```
 
-Omit `--speakers` when the count is unknown. ASR-only mode leaves every speaker unassigned; it does not pretend to diarize. Diarization uses anonymous IDs, not real names. This optional dependency range and pipeline revision remain unpinned pending validation; it is not a reproducible diarization benchmark yet.
+Omit `--speakers` when the count is unknown. ASR-only mode leaves every speaker unassigned; it does not pretend to diarize. Diarization starts with anonymous IDs. The live UI can enroll the creator's voice and attach the creator name only after a conservative similarity-and-margin check; all names remain reviewable. This optional dependency range and pipeline revision remain unpinned pending validation; it is not a reproducible diarization benchmark yet.
 
 ## Experiment
 

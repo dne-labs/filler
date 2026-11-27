@@ -36,7 +36,7 @@ class AudioTests(unittest.TestCase):
         ])
         self.assertEqual(args.initial_prompt, "Participants: Shubham")
         self.assertEqual(args.hotwords, "Shubham, model")
-        self.assertEqual(args.beam_size, 5)
+        self.assertEqual(args.beam_size, 5)\n\n    def test_creator_embedding_argument(self):\n        args = build_parser().parse_args(["--audio", "meeting.wav", "--creator-embedding", "[0.1, 0.2]"])\n        self.assertEqual(args.creator_embedding, "[0.1, 0.2]")
 
     def test_native_stdout_does_not_corrupt_protocol(self):
         import subprocess

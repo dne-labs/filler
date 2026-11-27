@@ -8,7 +8,7 @@ import { rawSchema } from './schema.js';
 import { align } from './align.js';
 
 export type WorkerRunner = (command: string, args: string[]) => Promise<string>;
-export interface Options { python?: string; model?: string; revision?: string; device?: 'cpu' | 'cuda'; computeType?: 'int8' | 'float16' | 'float32'; diarize?: boolean; speakers?: number; language?: string; initialPrompt?: string; hotwords?: string; beamSize?: number; workerRunner?: WorkerRunner }
+export interface Options { python?: string; model?: string; revision?: string; device?: 'cpu' | 'cuda'; computeType?: 'int8' | 'float16' | 'float32'; diarize?: boolean; speakers?: number; language?: string; initialPrompt?: string; hotwords?: string; beamSize?: number; creatorEmbedding?: number[]; workerRunner?: WorkerRunner }
 const probeSchema = z.object({ streams: z.array(z.object({ channels: z.number().int().positive(), sample_rate: z.string() })).min(1), format: z.object({ duration: z.coerce.number().finite().positive() }) });
 export async function transcribe(input: string, options: Options = {}) {
   const source = resolve(input);
@@ -30,6 +30,7 @@ export async function transcribe(input: string, options: Options = {}) {
     if (options.language) args.push('--language', options.language);
     if (options.initialPrompt) args.push('--initial-prompt', options.initialPrompt);
     if (options.hotwords) args.push('--hotwords', options.hotwords);
+    if (options.creatorEmbedding) args.push('--creator-embedding', JSON.stringify(options.creatorEmbedding));
     args.push('--beam-size', String(options.beamSize ?? 3));
     const execute = options.workerRunner ?? run;
     const raw = rawSchema.parse(JSON.parse(await execute(options.python ?? process.env.FILLER_PYTHON ?? 'python', args)));

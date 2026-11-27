@@ -40,6 +40,79 @@ def read_audio(path):
     return samples
 
 
+def speaker_embedding(samples, cache, device):
+    import numpy as np
+    import torch
+    from pyannote.audio import Inference, Model
+    if not os.environ.get("HF_TOKEN"):
+        raise ValueError("speaker identification requires HF_TOKEN")
+    key = ("speaker-embedding", device)
+    inference = cache.get(key)
+    if inference is None:
+        try:
+            model = Model.from_pretrained("pyannote/wespeaker-voxceleb-resnet34-LM", token=os.environ["HF_TOKEN"])
+        except TypeError:
+            model = Model.from_pretrained("pyannote/wespeaker-voxceleb-resnet34-LM", use_auth_token=os.environ["HF_TOKEN"])
+        model.to(torch.device(device))
+        inference = Inference(model, window="whole")
+        inference.to(torch.device(device))
+        cache[key] = inference
+    waveform = torch.from_numpy(samples.astype(np.float32, copy=False)).unsqueeze(0)
+    embedding = np.asarray(inference({"waveform": waveform, "sample_rate": 16000})).reshape(-1)
+    norm = np.linalg.norm(embedding)
+    if not np.isfinite(norm) or norm == 0:
+        raise ValueError("invalid speaker embedding")
+    return (embedding / norm).astype(np.float32)
+
+
+def match_creator(audio, turns, reference, cache, device):
+    import numpy as np
+    labels = sorted({turn["speaker"] for turn in turns})
+    scores = []
+    for label in labels:
+        clean = []
+        for turn in turns:
+            if turn["speaker"] != label or turn["end"] - turn["start"] < 0.5:
+                continue
+            overlaps_other = any(
+                other["speaker"] != label
+                and min(turn["end"], other["end"]) > max(turn["start"], other["start"])
+                for other in turns
+            )
+            if not overlaps_other:
+                clean.append(turn)
+        if sum(turn["end"] - turn["start"] for turn in clean) < 2.0:
+            continue
+        pieces = []
+        remaining = 15.0
+        for turn in clean:
+            duration = min(turn["end"] - turn["start"], remaining)
+            if duration <= 0:
+                break
+            start = int(turn["start"] * 16000)
+            pieces.append(audio[start:start + int(duration * 16000)])
+            remaining -= duration
+        if pieces:
+            candidate = speaker_embedding(np.concatenate(pieces), cache, device)
+            scores.append((label, float(np.dot(reference, candidate))))
+    scores.sort(key=lambda item: item[1], reverse=True)
+    if not scores:
+        return {"speaker": None, "similarity": None, "confident": False, "reason": "not enough clean speech"}
+    best = scores[0]
+    second = scores[1][1] if len(scores) > 1 else -1.0
+    threshold = float(os.environ.get("FILLER_CREATOR_THRESHOLD", "0.72"))
+    margin = float(os.environ.get("FILLER_CREATOR_MARGIN", "0.08"))
+    return {
+        "speaker": best[0],
+        "similarity": round(best[1], 4),
+        "secondBestSimilarity": round(second, 4) if second >= -0.5 else None,
+        "confident": best[1] >= threshold and best[1] - second >= margin,
+        "threshold": threshold,
+        "margin": margin,
+        "calibration": "prototype; confirm in UI",
+    }
+
+
 def infer(args, cache=None):
     from faster_whisper import WhisperModel
     from huggingface_hub import snapshot_download
@@ -83,8 +156,13 @@ def infer(args, cache=None):
         import torch
         from pyannote.audio import Pipeline
         diar_start = time.perf_counter()
-        pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-community-1", token=os.environ["HF_TOKEN"])
-        pipeline.to(torch.device(args.device))
+        pipeline_key = ("diarization", args.device)
+        pipeline = cache.get(pipeline_key) if cache is not None else None
+        if pipeline is None:
+            pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization-community-1", token=os.environ["HF_TOKEN"])
+            pipeline.to(torch.device(args.device))
+            if cache is not None:
+                cache[pipeline_key] = pipeline
         kwargs = {"num_speakers": args.speakers} if args.speakers else {}
         output = pipeline({"waveform": torch.from_numpy(audio.copy()).unsqueeze(0), "sample_rate": 16000}, **kwargs)
         # Use regular, not exclusive, diarization so simultaneous speakers survive.
@@ -93,7 +171,16 @@ def infer(args, cache=None):
                 turns.append({"start": max(0.0, span.start), "end": min(len(audio) / 16000, span.end), "speaker": speaker})
         diarization = {"status": "completed", "model": "pyannote/speaker-diarization-community-1",
                        "revision": "unresolved (pipeline default)", "seconds": time.perf_counter() - diar_start,
+                       "detectedSpeakers": len({turn["speaker"] for turn in turns}),
                        "packageVersion": importlib.metadata.version("pyannote.audio")}
+    creator_match = None
+    if args.creator_embedding:
+        import numpy as np
+        reference = np.asarray(json.loads(args.creator_embedding), dtype=np.float32)
+        norm = np.linalg.norm(reference)
+        if reference.ndim != 1 or reference.size < 32 or not np.isfinite(norm) or norm == 0:
+            raise ValueError("invalid creator embedding")
+        creator_match = match_creator(audio, turns, reference / norm, cache if cache is not None else {}, args.device)
     elapsed = time.perf_counter() - started
     duration = len(audio) / 16000
     return {"schemaVersion": 1, "duration": duration, "words": words, "turns": turns,
@@ -104,6 +191,7 @@ def infer(args, cache=None):
                          "droppedInvalidWords": dropped, "modelLoadSeconds": loaded - started,
                          "asrSeconds": asr_done - loaded, "workerSeconds": elapsed,
                          "workerRtf": elapsed / duration, "diarization": diarization,
+                         "creatorMatch": creator_match,
                          "python": platform.python_version(), "machine": platform.machine(),
                          "packages": {p: importlib.metadata.version(p) for p in ["faster-whisper", "ctranslate2", "huggingface-hub", "numpy"]}}}
 
@@ -121,6 +209,7 @@ def build_parser():
     parser.add_argument("--initial-prompt")
     parser.add_argument("--hotwords")
     parser.add_argument("--beam-size", type=int, choices=range(1, 6), default=3)
+    parser.add_argument("--creator-embedding")
     parser.add_argument("--serve", action="store_true")
     return parser
 
@@ -141,11 +230,19 @@ def serve(parser):
     for line in sys.stdin:
         try:
             request = json.loads(line)
-            args = parser.parse_args(request["args"])
-            if not args.audio:
-                raise ValueError("audio is required")
-            with model_output_to_stderr():
-                result = infer(args, cache)
+            if request.get("action") == "enroll":
+                audio = read_audio(request["audio"])
+                if len(audio) < 3 * 16000 or len(audio) > 12 * 16000:
+                    raise ValueError("creator enrollment must contain 3 to 12 seconds of audio")
+                with model_output_to_stderr():
+                    embedding = speaker_embedding(audio, cache, request.get("device", "cpu"))
+                result = {"embedding": embedding.tolist()}
+            else:
+                args = parser.parse_args(request["args"])
+                if not args.audio:
+                    raise ValueError("audio is required")
+                with model_output_to_stderr():
+                    result = infer(args, cache)
             response = {"ok": True, "result": result}
         except Exception as error:
             print(f"speech worker error: {type(error).__name__}: {error}", file=sys.stderr)

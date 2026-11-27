@@ -1,6 +1,6 @@
 import { meetingSchema, type Meeting } from '../schema.js';
-export interface MeetingSetup { participants: string[]; vocabulary: string[]; topic?: string }
-export interface Session { revision: number; nextSpeaker: number; meeting?: Meeting; names: Record<string,string>; busy: boolean; sequence: number; setup: MeetingSetup; }
+export interface MeetingSetup { participants: string[]; vocabulary: string[]; topic?: string; creatorName?: string }
+export interface Session { revision: number; nextSpeaker: number; meeting?: Meeting; names: Record<string,string>; busy: boolean; sequence: number; setup: MeetingSetup; creatorEmbedding?: number[]; }
 export const createSession = (setup: MeetingSetup = { participants: [], vocabulary: [] }): Session => ({ revision: 0, nextSpeaker: 1, names: {}, busy: false, sequence: -1, setup });
 /** Reconcile anonymous clusters using the SAME audio timeline, never by label equality. */
 export function reconcile(session: Session, incoming: Meeting): Meeting {
@@ -24,8 +24,14 @@ export function reconcile(session: Session, incoming: Meeting): Meeting {
     if(best && best[1]>=1 && best[1]/total>=0.85 && !competing && !used.has(best[0])) { mapping.set(id,best[0]); used.add(best[0]); }
   }
   for(const id of Object.keys(m.speakers)) if(!mapping.has(id)) mapping.set(id,`S${session.nextSpeaker++}`);
+  const creatorMatch=m.metadata.creatorMatch as {speaker?:string;similarity?:number;confident?:boolean}|undefined;
+  if(creatorMatch?.confident&&creatorMatch.speaker&&session.setup.creatorName){
+    const stable=mapping.get(creatorMatch.speaker);
+    if(stable)session.names[stable]=session.setup.creatorName;
+  }
   m.speakers=Object.fromEntries([...mapping.values()].map(id=>[id,session.names[id]??id]));
   for(const s of m.segments){ if(s.speaker) s.speaker=mapping.get(s.speaker)!; if(s.candidates) s.candidates=s.candidates.map(c=>({...c,speaker:mapping.get(c.speaker)!})); }
+  if(creatorMatch?.speaker)creatorMatch.speaker=mapping.get(creatorMatch.speaker);
   m.insights=[]; // Old evidence IDs belong to the old revision.
   return meetingSchema.parse(m);
 }

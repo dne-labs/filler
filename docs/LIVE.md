@@ -8,9 +8,15 @@
 4. Copy `.env.example` to `.env`; set the Python executable.
 5. For speakers: install `requirements-diarization.txt`, accept Community-1 conditions, supply HF_TOKEN, and set FILLER_DIARIZE=1. Without this, transcription works but speaker identities remain unknown.
 6. For AI notes/name hypotheses: set FILLER_LLM_URL to a complete compatible chat-completions endpoint and FILLER_LLM_MODEL to an available model. Set FILLER_LLM_KEY if required. JSON response format must be supported. Local or hosted endpoints work through the adapter; no model is bundled. A hosted endpoint receives transcript text.
-7. `npm start`, open http://localhost:3000, inform participants, and click Start meeting. Grant microphone access.
+7. `npm start`, open http://localhost:3000, inform participants, enter the creator's name, and click Start meeting. Grant microphone access. When prompted, the creator speaks alone for about six seconds. After enrollment, ask every other participant to introduce themselves one at a time.
 
 Click Stop & finish to process the final snapshot; inference already in flight completes first. Failed final updates can be retried. Download notes exports the current meeting JSON. Clear session deletes in-memory transcript/name state. Audio snapshots are temporary and removed after inference; browser audio stays in memory until the page is cleared/closed. Nothing survives server restart. Use localhost; the unauthenticated local prototype deliberately rejects remote hosts and foreign origins.
+
+## Creator and participant identity
+
+With diarization enabled, the meeting creator records a 6-second enrollment sample before the meeting timer begins. The sample is converted to a WeSpeaker voice embedding and kept only in server memory. For each update, the system compares the enrollment with at least two seconds of clean, non-overlapping speech from each detected voice. It assigns the creator name only when the similarity passes both `FILLER_CREATOR_THRESHOLD` (default 0.72) and `FILLER_CREATOR_MARGIN` (default 0.08) over the next-best voice. These defaults are prototype calibration values, not universal biometric guarantees. Confirm or correct every identity in the UI.
+
+“Voices heard so far” counts distinct diarized voices that have spoken. A center laptop microphone cannot count silent people or reliably infer where someone is seated. Other participants are named from the configured roster and evidence such as introductions or addressed responses; those names remain suggestions until confirmed.
 
 ## Implemented behavior
 
@@ -28,7 +34,7 @@ Click Stop & finish to process the final snapshot; inference already in flight c
 
 This is **near-live repeated batch inference**, not a production streaming ASR/diarization engine. Full-recording reprocessing still increases latency and compute cost as the meeting grows, although the model now stays loaded. Limit: 10 minutes, mono PCM16, 64MB upload, one active inference job, ten in-memory sessions. The UI automatically stops near ten minutes. It does not track physical seating or board position, and it cannot guarantee transcription of simultaneous voices.
 
-Next engineering step: persistent model worker, rolling windows with overlap and stable speaker embeddings, transcript revision events, context retrieval, and realistic multi-speaker evaluation. The current app intentionally labels its uncertainty rather than claiming those capabilities.
+Next engineering step: rolling windows with overlap, calibrated multi-session speaker verification, transcript revision events, context retrieval, and realistic multi-speaker evaluation. The current app intentionally labels its uncertainty rather than claiming those capabilities.
 
 ## Validation
 

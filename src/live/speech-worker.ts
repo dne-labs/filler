@@ -12,13 +12,22 @@ export class PersistentSpeechWorker {
   constructor(private readonly python: string, private readonly workerPath = fileURLToPath(new URL('../../workers/speech/worker.py', import.meta.url))) {}
 
   async run(_command: string, args: string[]): Promise<string> {
-    this.ensureStarted();
-    if (this.pending) throw new InferenceError('Speech worker is already processing audio.');
     const defaultWorkerPath = fileURLToPath(new URL('../../workers/speech/worker.py', import.meta.url));
     const workerArgs = args[0] === defaultWorkerPath ? args.slice(1) : args;
+    return this.request({ action: 'transcribe', args: workerArgs });
+  }
+
+  async enroll(audio: string): Promise<number[]> {
+    const response = JSON.parse(await this.request({ action: 'enroll', audio })) as { embedding: number[] };
+    return response.embedding;
+  }
+
+  private request(payload: unknown): Promise<string> {
+    this.ensureStarted();
+    if (this.pending) throw new InferenceError('Speech worker is already processing audio.');
     return new Promise<string>((resolve, reject) => {
       this.pending = { resolve, reject };
-      this.child!.stdin.write(`${JSON.stringify({ args: workerArgs })}\n`);
+      this.child!.stdin.write(`${JSON.stringify(payload)}\n`);
     });
   }
 
