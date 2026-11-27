@@ -17,7 +17,8 @@
     "benchmark": "node --import tsx experiments/asr.ts",
     "web:build": "vite build web --outDir ../dist/web",
     "start": "node --env-file-if-exists=.env --import tsx src/live/server.ts",
-    "web:check": "tsc --noEmit -p web/tsconfig.json"
+    "web:check": "tsc --noEmit -p web/tsconfig.json",
+    "doctor": "node --env-file-if-exists=.env --import tsx src/doctor.ts"
   },
   "dependencies": {
     "express": "5.1.0",

@@ -1,3 +1,4 @@
+import {publicFailure} from '../diagnostics.js';
 import express from 'express';
 import {randomUUID} from 'node:crypto';
 import {mkdtemp,writeFile,rm} from 'node:fs/promises';
@@ -38,7 +39,7 @@ app.post('/api/sessions/:id/audio',express.raw({type:'audio/wav',limit:'64mb'}),
  try{const result=await analyze(updated);updated.insights=result.insights;names=result.names;}catch(e){aiError=e instanceof Error?e.message:'AI unavailable';}
  session.meeting=updated;session.sequence=sequence;session.revision++;
  res.json({meeting:updated,names,aiError,revision:session.revision,sequence,provisional:true});
- }catch{res.status(500).json({error:'Inference failed. Check speech dependencies, model access and FILLER_PYTHON.'});}
+ }catch(error){const message=publicFailure(error);console.error(message);res.status(500).json({error:message});}
  finally{session.busy=false;processing=false;if(temp)await rm(temp,{recursive:true,force:true});}
 });
 app.post('/api/sessions/:id/name',express.json({limit:'4kb'}),(req,res)=>{

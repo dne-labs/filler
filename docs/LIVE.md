@@ -33,3 +33,28 @@ Next engineering step: persistent model worker, rolling windows with overlap and
 Static checks: `npm run check` and `npm run web:check`. UI build: `npm run web:build`. Regression tests: `npm test`. Tests cover cluster renumbering, identity ambiguity, AI evidence validation, suggestion-only names, and a mock compatible LLM response. Mock tests do not establish real model reasoning quality. See experiments/results/live-http.json for the actual local HTTP audio smoke test, if present.
 
 A physical microphone meeting, gated pyannote inference, and a configured live LLM still need end-to-end evaluation. No claim of noisy multi-speaker accuracy is made.
+
+## DeepSeek notes and name suggestions
+
+Set these in your local `.env` and restart the server:
+
+```dotenv
+FILLER_LLM_URL=https://api.deepseek.com/chat/completions
+FILLER_LLM_MODEL=deepseek-flash
+FILLER_LLM_KEY=your_actual_key_here
+```
+
+DeepSeek receives transcript text to propose notes and speaker names. It does not replace the local speech worker. Keep the key out of source control and chat. No real DeepSeek request was run during development without a user key. Model names follow https://api-docs.deepseek.com/ (checked 2026-11-27); choose a model available to your account that supports JSON output.
+
+## Diagnosing an inference failure
+
+Run `npm run doctor` from the repository root. It loads `.env`, checks FFmpeg/ffprobe, and tests imports in the exact Python interpreter used by the server. It does not print API keys or verify model access. The UI now reports known failures with an actionable summary rather than discarding every worker error.
+
+For a new local environment:
+
+```bash
+python -m venv .venv
+.venv/bin/python -m pip install -r workers/speech/requirements-asr-tested.txt
+```
+
+Set `FILLER_PYTHON` to the absolute path of `.venv/bin/python`. For an initial English transcription-only check, set `FILLER_DIARIZE=0` and `FILLER_ASR_MODEL=Systran/faster-whisper-tiny.en`. Restart `npm start`. Enable diarization again after installing its dependencies and confirming gated-model access. This setup check does not claim to diagnose a specific user's machine without its actual diagnostic output.
