@@ -2,7 +2,7 @@ import tempfile
 import unittest
 import wave
 from pathlib import Path
-from worker import read_audio
+from worker import build_parser, read_audio
 
 
 class AudioTests(unittest.TestCase):
@@ -28,6 +28,15 @@ class AudioTests(unittest.TestCase):
                 f.setparams((1, 2, 16000, 0, 'NONE', 'not compressed'))
             with self.assertRaises(ValueError):
                 read_audio(path)
+
+    def test_context_and_accuracy_arguments(self):
+        args = build_parser().parse_args([
+            "--audio", "meeting.wav", "--initial-prompt", "Participants: Shubham",
+            "--hotwords", "Shubham, model", "--beam-size", "5"
+        ])
+        self.assertEqual(args.initial_prompt, "Participants: Shubham")
+        self.assertEqual(args.hotwords, "Shubham, model")
+        self.assertEqual(args.beam_size, 5)
 
     def test_native_stdout_does_not_corrupt_protocol(self):
         import subprocess

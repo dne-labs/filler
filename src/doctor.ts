@@ -9,6 +9,10 @@ try{
 }catch(e){failed=true;console.error((e as Error).message);}
 console.log('Diarization enabled:',process.env.FILLER_DIARIZE==='1');
 if(process.env.FILLER_DIARIZE==='1'&&!process.env.HF_TOKEN){failed=true;console.error('HF_TOKEN missing for diarization.');}
+const asrModel=process.env.FILLER_ASR_MODEL??'Systran/faster-whisper-small';
+console.log('ASR model:',asrModel);
+if(/tiny/i.test(asrModel))console.warn('Accuracy warning: tiny models are smoke-test models. Use Systran/faster-whisper-small for names, accents and technical meetings.');
+if(process.env.FILLER_DIARIZE!=='1')console.warn('Speaker-name warning: diarization is disabled, so voices cannot be assigned stable speaker IDs or names.');
 console.log('AI configured:',!!process.env.FILLER_LLM_URL&&!!process.env.FILLER_LLM_MODEL,'API key present:',!!process.env.FILLER_LLM_KEY);
 console.log('This checks local setup only, not model downloads, credentials or inference accuracy.');
 process.exitCode=failed?1:0;

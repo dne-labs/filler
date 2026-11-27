@@ -42,7 +42,7 @@ npm run transcribe -- /absolute/path/meeting.wav \
   --out outputs/meeting-01 --python .venv/bin/python --language en
 ```
 
-Default: `Systran/faster-whisper-tiny.en`, CPU INT8, four CPU threads, beam size 1, VAD off. This small English model is for smoke tests, not the final accuracy target. Internet is needed on the first model download. For multilingual recordings choose a multilingual model repository; omit `--language` for detection. Use `--model REPO --revision COMMIT_SHA` for a fixed ASR snapshot. Resolved ASR SHA is recorded even when `main` is requested.
+The live server defaults to multilingual `Systran/faster-whisper-small`, CPU INT8, four CPU threads, beam size 3 and VAD. Add participant names and vocabulary on the meeting screen before recording. Tiny English models are only for smoke tests; they commonly damage names, accents and technical terms. Leave `FILLER_LANGUAGE` unset for multilingual/Hinglish detection. Internet is needed on the first model download. Use `--model REPO --revision COMMIT_SHA` for a fixed ASR snapshot. Resolved ASR SHA is recorded even when `main` is requested.
 
 For a CUDA environment with compatible CTranslate2 libraries, pass `--device cuda --compute-type float16`. GPU execution is not validated by our CPU experiment.
 

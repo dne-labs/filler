@@ -1,6 +1,7 @@
 import { meetingSchema, type Meeting } from '../schema.js';
-export interface Session { revision: number; nextSpeaker: number; meeting?: Meeting; names: Record<string,string>; busy: boolean; sequence: number; }
-export const createSession = (): Session => ({ revision: 0, nextSpeaker: 1, names: {}, busy: false, sequence: -1 });
+export interface MeetingSetup { participants: string[]; vocabulary: string[]; topic?: string }
+export interface Session { revision: number; nextSpeaker: number; meeting?: Meeting; names: Record<string,string>; busy: boolean; sequence: number; setup: MeetingSetup; }
+export const createSession = (setup: MeetingSetup = { participants: [], vocabulary: [] }): Session => ({ revision: 0, nextSpeaker: 1, names: {}, busy: false, sequence: -1, setup });
 /** Reconcile anonymous clusters using the SAME audio timeline, never by label equality. */
 export function reconcile(session: Session, incoming: Meeting): Meeting {
   const m = meetingSchema.parse(incoming);

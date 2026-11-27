@@ -14,9 +14,11 @@ Click Stop & finish to process the final snapshot; inference already in flight c
 
 ## Implemented behavior
 
-- AudioWorklet continuously captures mono PCM. The browser builds valid cumulative WAV snapshots approximately every 15 seconds, without restarting the microphone or cutting the recording into independently diarized fragments.
+- Before recording, add participant names, the topic, and important vocabulary. They are passed to Whisper as context and hotwords. This can improve uncommon names such as Shubham and terms such as “model”, but it cannot guarantee the spelling of unclear speech.
+- AudioWorklet continuously captures mono PCM. The browser builds valid cumulative WAV snapshots approximately every 8 seconds, without restarting the microphone or cutting the recording into independently diarized fragments.
 - Only one inference job runs at once. While busy, intermediate updates are coalesced; the next snapshot contains all captured audio. Sequences reject old/replayed successful snapshots.
-- ASR and optional diarization run on the full captured recording each time. The meeting state is replaced atomically with a new revision. Earlier text may change. All snapshots remain reviewable/provisional, including the stopped recording's AI suggestions.
+- ASR and optional diarization run on the full captured recording each time. A persistent Python worker keeps the ASR model loaded between updates, reducing repeated model-startup delay. The meeting state is replaced atomically with a new revision, so earlier text may change. All snapshots remain reviewable/provisional, including the stopped recording's AI suggestions.
+- DeepSeek receives grouped utterances with evidence IDs instead of isolated word objects. This improves note coherence and reduces prompt size. It still cannot restore words that speech recognition never heard correctly.
 - Anonymous labels are reconciled across revisions using temporal overlap with the previous transcript. Ambiguous merges/splits get fresh IDs instead of inheriting confirmed names. This is a temporal heuristic, not a persistent biometric identity guarantee.
 - An LLM proposes notes and names using transcript evidence. Name suggestions never auto-confirm. Confirm/edit a person's name in People; confirmations are revision-checked. Suggestions based on an addressed name and the following response can be wrong if another person interrupts.
 - AI evidence references and owner IDs are validated. This prevents dangling references, not semantic hallucination. Review notes against transcript/audio. Old insights are removed on each revision rather than retaining stale word IDs.
@@ -24,7 +26,7 @@ Click Stop & finish to process the final snapshot; inference already in flight c
 
 ## Practical limits
 
-This is **near-live repeated batch inference**, not a production streaming ASR/diarization engine. Full-recording reprocessing and fresh model processes increase latency and compute cost as the meeting grows. Limit: 10 minutes, mono PCM16, 64MB upload, one active inference job, ten in-memory sessions. The UI automatically stops near ten minutes. It does not track physical seating or board position, and it cannot guarantee transcription of simultaneous voices.
+This is **near-live repeated batch inference**, not a production streaming ASR/diarization engine. Full-recording reprocessing still increases latency and compute cost as the meeting grows, although the model now stays loaded. Limit: 10 minutes, mono PCM16, 64MB upload, one active inference job, ten in-memory sessions. The UI automatically stops near ten minutes. It does not track physical seating or board position, and it cannot guarantee transcription of simultaneous voices.
 
 Next engineering step: persistent model worker, rolling windows with overlap and stable speaker embeddings, transcript revision events, context retrieval, and realistic multi-speaker evaluation. The current app intentionally labels its uncertainty rather than claiming those capabilities.
 
@@ -57,4 +59,4 @@ python -m venv .venv
 .venv/bin/python -m pip install -r workers/speech/requirements-asr-tested.txt
 ```
 
-Set `FILLER_PYTHON` to the absolute path of `.venv/bin/python`. For an initial English transcription-only check, set `FILLER_DIARIZE=0` and `FILLER_ASR_MODEL=Systran/faster-whisper-tiny.en`. Restart `npm start`. Enable diarization again after installing its dependencies and confirming gated-model access. This setup check does not claim to diagnose a specific user's machine without its actual diagnostic output.
+Set `FILLER_PYTHON` to the virtual-environment path such as `/home/krishna/filler/.venv/bin/python`; do not replace it with `realpath`, which may resolve to the base interpreter. Use `FILLER_ASR_MODEL=Systran/faster-whisper-small` for real meetings. Tiny models are suitable only for setup smoke tests and frequently damage names and technical terms. Leave `FILLER_LANGUAGE` unset for multilingual/Hinglish detection. Enable diarization after installing its dependencies and confirming gated-model access. Without diarization, Filler can transcribe and write notes but cannot determine which voice belongs to Krishna or Shubham.

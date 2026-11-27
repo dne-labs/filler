@@ -7,7 +7,8 @@ import { run } from './process.js';
 import { rawSchema } from './schema.js';
 import { align } from './align.js';
 
-export interface Options { python?: string; model?: string; revision?: string; device?: 'cpu' | 'cuda'; computeType?: 'int8' | 'float16' | 'float32'; diarize?: boolean; speakers?: number; language?: string }
+export type WorkerRunner = (command: string, args: string[]) => Promise<string>;
+export interface Options { python?: string; model?: string; revision?: string; device?: 'cpu' | 'cuda'; computeType?: 'int8' | 'float16' | 'float32'; diarize?: boolean; speakers?: number; language?: string; initialPrompt?: string; hotwords?: string; beamSize?: number; workerRunner?: WorkerRunner }
 const probeSchema = z.object({ streams: z.array(z.object({ channels: z.number().int().positive(), sample_rate: z.string() })).min(1), format: z.object({ duration: z.coerce.number().finite().positive() }) });
 export async function transcribe(input: string, options: Options = {}) {
   const source = resolve(input);
@@ -27,7 +28,11 @@ export async function transcribe(input: string, options: Options = {}) {
     if (options.diarize) args.push('--diarize');
     if (options.speakers) args.push('--speakers', String(options.speakers));
     if (options.language) args.push('--language', options.language);
-    const raw = rawSchema.parse(JSON.parse(await run(options.python ?? process.env.FILLER_PYTHON ?? 'python', args)));
+    if (options.initialPrompt) args.push('--initial-prompt', options.initialPrompt);
+    if (options.hotwords) args.push('--hotwords', options.hotwords);
+    args.push('--beam-size', String(options.beamSize ?? 3));
+    const execute = options.workerRunner ?? run;
+    const raw = rawSchema.parse(JSON.parse(await execute(options.python ?? process.env.FILLER_PYTHON ?? 'python', args)));
     raw.metadata = { ...raw.metadata, sourceChannels: probe.streams[0]!.channels, sourceSampleRate: Number(probe.streams[0]!.sample_rate), normalization: 'first audio stream; mono 16kHz PCM; original unmodified', pipelineSeconds: (performance.now() - start) / 1000 };
     return { raw, meeting: align(raw) };
   } finally { await rm(temp, { recursive: true, force: true }); }

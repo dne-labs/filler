@@ -8,9 +8,11 @@ import {z} from 'zod';
 import {transcribe} from '../pipeline.js';
 import {createSession,reconcile} from './state.js';
 import {analyze} from './intelligence.js';
+import {PersistentSpeechWorker} from './speech-worker.js';
 const app=express();
 const port=Number(process.env.PORT??3000);
 const sessions=new Map<string,ReturnType<typeof createSession>>();
+const speechWorker=new PersistentSpeechWorker(process.env.FILLER_PYTHON??'python');
 let processing=false;
 app.use((req,res,next)=>{
  const allowed=[`localhost:${port}`,`127.0.0.1:${port}`];
@@ -18,8 +20,9 @@ app.use((req,res,next)=>{
  if(req.headers.origin&&!allowed.some(h=>req.headers.origin===`http://${h}`)){res.status(403).json({error:'Origin rejected'});return;}
  res.setHeader('Cache-Control','no-store'); next();
 });
-app.get('/api/config',(_req,res)=>res.json({diarization:process.env.FILLER_DIARIZE==='1',ai:!!process.env.FILLER_LLM_URL&&!!process.env.FILLER_LLM_MODEL}));
-app.post('/api/sessions',(_req,res)=>{if(sessions.size>=10){res.status(429).json({error:'Delete an old session first'});return;}const id=randomUUID();sessions.set(id,createSession());res.json({id});});
+app.get('/api/config',(_req,res)=>res.json({diarization:process.env.FILLER_DIARIZE==='1',ai:!!process.env.FILLER_LLM_URL&&!!process.env.FILLER_LLM_MODEL,asrModel:process.env.FILLER_ASR_MODEL??'Systran/faster-whisper-small'}));
+const setupSchema=z.object({participants:z.array(z.string().trim().min(1).max(80)).max(12).default([]),vocabulary:z.array(z.string().trim().min(1).max(80)).max(40).default([]),topic:z.string().trim().max(200).optional()});
+app.post('/api/sessions',express.json({limit:'8kb'}),(req,res)=>{if(sessions.size>=10){res.status(429).json({error:'Delete an old session first'});return;}const parsed=setupSchema.safeParse(req.body??{});if(!parsed.success){res.status(400).json({error:'Invalid meeting setup'});return;}const id=randomUUID();sessions.set(id,createSession(parsed.data));res.json({id});});
 app.post('/api/sessions/:id/audio',express.raw({type:'audio/wav',limit:'64mb'}),async(req,res)=>{
  const session=sessions.get(req.params.id); if(!session){res.sendStatus(404);return;}
  const sequence=Number(req.query.sequence);
@@ -33,7 +36,10 @@ app.post('/api/sessions/:id/audio',express.raw({type:'audio/wav',limit:'64mb'}),
  let temp:string|undefined;
  try{
  temp=await mkdtemp(join(tmpdir(),'filler-live-'));const path=join(temp,'snapshot.wav');await writeFile(path,b);
- const {meeting}=await transcribe(path,{diarize:process.env.FILLER_DIARIZE==='1',model:process.env.FILLER_ASR_MODEL??'Systran/faster-whisper-small',language:process.env.FILLER_LANGUAGE});
+ const context=[session.setup.topic?`Meeting topic: ${session.setup.topic}.`:'',session.setup.participants.length?`Participants: ${session.setup.participants.join(', ')}.`:'',session.setup.vocabulary.length?`Important vocabulary: ${session.setup.vocabulary.join(', ')}.`:''].filter(Boolean).join(' ');
+ const hotwords=[...session.setup.participants,...session.setup.vocabulary].join(', ');
+ const {meeting}=await transcribe(path,{diarize:process.env.FILLER_DIARIZE==='1',model:process.env.FILLER_ASR_MODEL??'Systran/faster-whisper-small',language:process.env.FILLER_LANGUAGE,initialPrompt:context||undefined,hotwords:hotwords||undefined,beamSize:Number(process.env.FILLER_BEAM_SIZE??3),workerRunner:speechWorker.run.bind(speechWorker)});
+ meeting.metadata={...meeting.metadata,participants:session.setup.participants,topic:session.setup.topic,vocabulary:session.setup.vocabulary};
  const updated=reconcile(session,meeting);
  let names:unknown[]=[];let aiError:string|undefined;
  try{const result=await analyze(updated);updated.insights=result.insights;names=result.names;}catch(e){aiError=e instanceof Error?e.message:'AI unavailable';}
@@ -55,3 +61,4 @@ app.delete('/api/sessions/:id',(req,res)=>{const s=sessions.get(req.params.id);i
 app.use(express.static('dist/web'));
 app.use((err:unknown,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{res.status(400).json({error:'Invalid or oversized request'});});
 app.listen(port,'127.0.0.1',()=>console.log(`Filler meeting room: http://localhost:${port}`));
+for(const signal of ['SIGINT','SIGTERM'] as const)process.once(signal,()=>{speechWorker.close();process.exit(0);});
