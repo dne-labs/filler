@@ -45,12 +45,7 @@ class AudioTests(unittest.TestCase):
     def test_native_stdout_does_not_corrupt_protocol(self):
         import subprocess
         import sys
-        script = "from worker import model_output_to_stderr; import os
-with model_output_to_stderr():
- print('python log')
- os.write(1, b'native log
-')
-print('{}')"
+        script = "from worker import model_output_to_stderr; import os\nwith model_output_to_stderr():\n print('python log')\n os.write(1, b'native log\\n')\nprint('{}')"
         result = subprocess.run([sys.executable, '-c', script], cwd=Path(__file__).parent, capture_output=True, text=True, check=True)
         self.assertEqual(result.stdout.strip(), '{}')
         self.assertIn('native log', result.stderr)
