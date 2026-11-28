@@ -1,11 +1,11 @@
+'use client';
+
 import React, { useEffect, useRef, useState } from 'react';
-import { createRoot } from 'react-dom/client';
 import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
 import { Activity, ArrowDown, ArrowRight, ArrowUpRight, AudioLines, Check, ChevronDown, CircleAlert, Clock3, Gauge, Headphones, Layers3, Menu, Mic2, Pause, Play, Radio, RotateCcw, Shield, Sparkles, X, Zap } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
-import './style.css';
 
 gsap.registerPlugin(ScrollTrigger);
 type DemoJob={id:number;label:string;duration:string;priority:'urgent'|'normal'|'low';state:'queued'|'running'|'done'};
@@ -31,4 +31,4 @@ function Closing(){return <section className="closing-section"><div className="c
 function Footer(){return <footer className="site-footer"><Logo/><span>Voice inference, in flow.</span><div><a href="#system">System</a><a href="#controls">Controls</a><a href="#simulation">Simulator</a><a href="https://github.com/dne-labs/filler" target="_blank" rel="noreferrer">GitHub <ArrowUpRight size={12}/></a></div><small>© 2026 DNE Labs · Scheduler simulation, not ASR inference.</small></footer>}
 function App(){const shell=useRef<HTMLDivElement>(null);useEffect(()=>{const lenis=new Lenis({duration:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0.01 : 1.15,smoothWheel:true,wheelMultiplier:.85});let frame=0;const raf=(time:number)=>{lenis.raf(time);ScrollTrigger.update();frame=requestAnimationFrame(raf)};frame=requestAnimationFrame(raf);gsap.to('.scroll-progress',{scaleX:1,ease:'none',scrollTrigger:{trigger:document.body,start:'top top',end:'bottom bottom',scrub:true}});const onClick=(event:Event)=>{const target=event.target as HTMLElement;const link=target.closest('a[href^="#"]') as HTMLAnchorElement|null;if(link){const id=link.getAttribute('href');if(id&&id.length>1){const section=document.querySelector(id);if(section){event.preventDefault();lenis.scrollTo(section,{offset:-86,duration:1.25})}}}};document.addEventListener('click',onClick);return()=>{cancelAnimationFrame(frame);document.removeEventListener('click',onClick);lenis.destroy();ScrollTrigger.getAll().forEach(trigger=>trigger.kill())}},[]);return <div ref={shell} className="site-shell"><Header/><main><Hero/><Ticker/><Intro/><SystemSection/><ControlsSection/><Simulator/><Closing/></main><Footer/><div className="scroll-progress"/></div>}
 
-createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
+export default App;

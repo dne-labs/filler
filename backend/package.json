@@ -1,5 +1,5 @@
 {
-  "name": "@filler/api",
+  "name": "@filler/backend",
   "version": "0.1.0",
   "private": true,
   "type": "module",
