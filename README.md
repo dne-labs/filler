@@ -8,7 +8,8 @@ The project includes an HTTP API, an in-memory scheduler for local use, a Redis-
 
 ## Monorepo
 
-- `apps/api` — HTTP API for submitting, checking, and cancelling requests.
+- `apps/web` — Next.js App Router site and interactive workload demo.
+- `backend` — Express HTTP API for submitting, checking, and cancelling requests.
 - `apps/simulator` — repeatable workload runner with worker-count and failure-rate controls.
 - `packages/scheduler` — priority queue, worker assignment, job lifecycle, retries, cancellation, health state, and optional circuit breaker.
 - `packages/worker` — CPU simulation worker adapter. Replace its `process` implementation with an ASR backend when ready.
@@ -21,7 +22,8 @@ Requirements: Node.js 22+ and pnpm 10+.
 pnpm install
 pnpm simulate                         # 100 requests, one worker
 pnpm simulate -- --workers 4 --requests 100 --fail-rate 0.03
-pnpm --filter @filler/api dev         # http://localhost:3001
+pnpm backend:dev                     # http://localhost:3001
+pnpm web:dev                    # http://localhost:3000
 ```
 
 Submit a request (audio duration metadata only in this milestone):
@@ -61,7 +63,7 @@ RATE_LIMIT_PER_CLIENT=30 \\
 RATE_LIMIT_WINDOW_MS=60000 \\
 MAX_QUEUE=1000 \\
 WORKER_CONCURRENCY=2 \\
-pnpm --filter @filler/api dev
+pnpm --filter @filler/backend dev
 ```
 
 Redis mode persists and prioritizes queued jobs, retries failures with exponential backoff, and supports cancellation while a job is waiting. Completed results remain queryable for one day. Active jobs cannot be force-stopped by the HTTP cancellation endpoint. Each API process starts a BullMQ worker; increase concurrency or run more API worker replicas to add capacity. Kafka is an optional lifecycle-event sink; events include waiting, active, completed, failed, and stalled transitions. If Kafka is configured, the API requires a successful Kafka connection at startup.
@@ -83,9 +85,9 @@ Start local Redis and Kafka dependencies with `pnpm infra:up`, then use the envi
 
 ## Landing page
 
-The React/Vite frontend lives in `apps/web`. It presents the scheduler flow, resilience controls, and an interactive 100-request workload playground. Framer Motion handles component transitions, GSAP/ScrollTrigger animates the request path, and Lenis provides smooth scrolling. Reduced-motion preferences are respected.
+The Next.js frontend lives in `apps/web`; the Express backend lives in `backend`. The site presents the scheduler flow, resilience controls, and an interactive 100-request workload playground. Framer Motion handles component transitions, GSAP/ScrollTrigger animates the request path, and Lenis provides smooth scrolling. Reduced-motion preferences are respected.
 
 ```bash
-pnpm web:dev      # http://localhost:5173
+pnpm web:dev      # http://localhost:3000
 pnpm web:build
 ```

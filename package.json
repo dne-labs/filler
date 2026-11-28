@@ -18,7 +18,8 @@
     "infra:down": "docker compose -f infra/docker-compose.yml down",
     "web:dev": "pnpm --filter @filler/web dev",
     "web:build": "pnpm --filter @filler/web build",
-    "web:check": "pnpm --filter @filler/web check"
+    "web:check": "pnpm --filter @filler/web check",
+    "backend:dev": "pnpm --filter @filler/backend dev"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
