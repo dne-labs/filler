@@ -13,3 +13,13 @@ export class CpuVoiceWorker implements WorkerAdapter {
     return { transcript:`[simulated transcript for ${job.audioMs}ms audio]`, audioMs:job.audioMs, workerId:this.id };
   }
 }
+
+/** Per-process breaker used by Redis-backed workers. An open circuit rejects work until one probe is allowed. */
+export class WorkerCircuitBreaker {
+  private failures=0; private openedAt=0; private probeActive=false;
+  constructor(readonly threshold=5,readonly cooldownMs=10_000){}
+  get state(): 'closed'|'open'|'half-open' {if(!this.openedAt)return 'closed';return Date.now()-this.openedAt>=this.cooldownMs?'half-open':'open';}
+  acquire(){const state=this.state;if(state==='open'||(state==='half-open'&&this.probeActive))return false;if(state==='half-open')this.probeActive=true;return true;}
+  success(){this.failures=0;this.openedAt=0;this.probeActive=false;}
+  failure(){this.probeActive=false;this.failures++;if(this.failures>=this.threshold)this.openedAt=Date.now();}
+}
