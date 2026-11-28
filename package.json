@@ -15,7 +15,10 @@
     "simulate:workers": "pnpm --filter @filler/simulator build && node apps/simulator/dist/index.js --workers 4 --requests 100",
     "simulate:autoscale": "pnpm --filter @filler/simulator build && node apps/simulator/dist/index.js --requests 100 --workers 1 --autoscale --max-workers 6",
     "infra:up": "docker compose -f infra/docker-compose.yml up -d",
-    "infra:down": "docker compose -f infra/docker-compose.yml down"
+    "infra:down": "docker compose -f infra/docker-compose.yml down",
+    "web:dev": "pnpm --filter @filler/web dev",
+    "web:build": "pnpm --filter @filler/web build",
+    "web:check": "pnpm --filter @filler/web check"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
