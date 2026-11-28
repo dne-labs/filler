@@ -80,3 +80,12 @@ node apps/simulator/dist/index.js --requests 100 --workers 1 --autoscale --max-w
 The simulator starts with one CPU worker, adds simulated workers as backlog grows, and removes idle workers when the queue drains. It reports the observed peak, scale-up/down counts, latency, retries, and throughput. It does not provision cloud compute.
 
 Start local Redis and Kafka dependencies with `pnpm infra:up`, then use the environment variables above. Stop the containers with `pnpm infra:down`. Redis data is kept in a named Docker volume.
+
+## Landing page
+
+The React/Vite frontend lives in `apps/web`. It presents the scheduler flow, resilience controls, and an interactive 100-request workload playground. Framer Motion handles component transitions, GSAP/ScrollTrigger animates the request path, and Lenis provides smooth scrolling. Reduced-motion preferences are respected.
+
+```bash
+pnpm web:dev      # http://localhost:5173
+pnpm web:build
+```
