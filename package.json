@@ -1,34 +1,23 @@
 {
   "name": "@dne-labs/filler",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "type": "module",
+  "packageManager": "pnpm@10.0.0",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "check": "tsc --noEmit",
-    "test": "node --import tsx --test tests/*.test.ts",
-    "demo": "node --import tsx src/cli.ts report examples/meeting.json",
-    "transcribe": "node --import tsx src/cli.ts transcribe",
-    "align": "node --import tsx src/cli.ts align",
-    "experiment": "node --import tsx experiments/attribution.ts",
-    "worker:test": "python -m unittest discover -s workers/speech -p 'test_*.py'",
-    "benchmark": "node --import tsx experiments/asr.ts",
-    "web:build": "vite build web --outDir ../dist/web",
-    "start": "node --env-file-if-exists=.env --import tsx src/live/server.ts",
-    "web:check": "tsc --noEmit -p web/tsconfig.json",
-    "doctor": "node --env-file-if-exists=.env --import tsx src/doctor.ts"
-  },
-  "dependencies": {
-    "express": "5.1.0",
-    "zod": "4.1.12"
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "check": "turbo run check",
+    "test": "turbo run test",
+    "simulate": "pnpm --filter @filler/simulator build && pnpm --filter @filler/simulator simulate",
+    "simulate:workers": "pnpm --filter @filler/simulator build && node apps/simulator/dist/index.js --workers 4 --requests 100"
   },
   "devDependencies": {
-    "@types/express": "5.0.5",
-    "@types/node": "22.19.1",
-    "tsx": "4.20.6",
-    "typescript": "5.9.3",
-    "vite": "6.4.1"
+    "turbo": "^2.5.0",
+    "typescript": "^5.9.3",
+    "tsx": "^4.20.6",
+    "@types/node": "^22.19.1"
   }
 }

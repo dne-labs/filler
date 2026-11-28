@@ -1,0 +1,11 @@
+import express from 'express';
+import { VoiceScheduler, type Priority } from '@filler/scheduler';
+import { CpuVoiceWorker } from '@filler/worker';
+const app=express(); app.use(express.json({limit:'1mb'}));
+const scheduler=new VoiceScheduler({maxQueue:1000,maxRetries:2});
+scheduler.registerWorker(new CpuVoiceWorker({id:'cpu-1'}));
+app.get('/health',(_req,res)=>res.json({status:'ok',...scheduler.snapshot()}));
+app.post('/v1/voice-requests',(req,res)=>{try{const {clientId,audioMs,priority}=req.body as {clientId:string;audioMs:number;priority?:Priority}; const job=scheduler.submit({clientId,audioMs,priority}); res.status(202).json({requestId:job.id,status:job.status,clientId:job.clientId});}catch(e){res.status(400).json({error:e instanceof Error?e.message:'invalid request'});}});
+app.get('/v1/voice-requests/:id',(req,res)=>{const job=scheduler.get(req.params.id); if(!job)return res.status(404).json({error:'request not found'}); res.json(job);});
+app.delete('/v1/voice-requests/:id',(req,res)=>{const cancelled=scheduler.cancel(req.params.id); res.status(cancelled?202:409).json({cancelled});});
+const port=Number(process.env.PORT??3001); app.listen(port,()=>console.log(`voice scheduler API listening on :${port}`));

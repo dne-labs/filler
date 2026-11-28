@@ -1,2 +1,0 @@
-# ASR-only CPU installation tested; full transitive snapshot is in requirements-asr-tested.txt.
-faster-whisper==1.2.1
