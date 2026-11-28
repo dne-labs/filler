@@ -12,7 +12,10 @@
     "check": "turbo run check",
     "test": "turbo run test",
     "simulate": "pnpm --filter @filler/simulator build && pnpm --filter @filler/simulator simulate",
-    "simulate:workers": "pnpm --filter @filler/simulator build && node apps/simulator/dist/index.js --workers 4 --requests 100"
+    "simulate:workers": "pnpm --filter @filler/simulator build && node apps/simulator/dist/index.js --workers 4 --requests 100",
+    "simulate:autoscale": "pnpm --filter @filler/simulator build && node apps/simulator/dist/index.js --requests 100 --workers 1 --autoscale --max-workers 6",
+    "infra:up": "docker compose -f infra/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infra/docker-compose.yml down"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
