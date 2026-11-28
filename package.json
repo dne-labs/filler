@@ -22,5 +22,6 @@
     "typescript": "^5.9.3",
     "tsx": "^4.20.6",
     "@types/node": "^22.19.1"
-  }
+  },
+  "description": "A Turborepo voice inference scheduler with priority queues, worker coordination, retries, request controls, and workload simulations."
 }

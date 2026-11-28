@@ -1,8 +1,10 @@
-# Filler Voice Inference Scheduler
+# Filler — Voice Inference Scheduler
 
-A TypeScript-first Turborepo for coordinating voice inference jobs. The first milestone runs locally with one CPU worker and can simulate concurrent callers and additional workers without requiring a GPU.
+Filler is a TypeScript-first Turborepo for coordinating concurrent voice inference requests. It accepts jobs, orders them by priority, assigns work to healthy workers, tracks each request through completion, and returns results to the client that submitted it. The simulator models bursts such as 100 users submitting audio at once, so queueing and scaling behavior can be measured without a GPU.
 
-> The built-in worker is a **scheduler simulation**. It models service time and transient failures and returns a placeholder transcript; it does not run speech recognition. The benchmark output is measured from the local simulation and must not be read as production ASR performance.
+The project includes an HTTP API, an in-memory scheduler for local use, a Redis-backed BullMQ queue for durable jobs, optional Kafka lifecycle events, worker retry and circuit-breaker controls, per-client rate limiting, and load shedding when the queue is full. A workload simulator can add or remove CPU workers based on backlog and reports measured throughput, retries, and request latency.
+
+**Current inference boundary:** the CPU worker simulates service time and failures and returns a placeholder transcript. It does not perform speech recognition. Measurements describe scheduler behavior only; connect a real ASR model before making claims about transcription quality or inference performance.
 
 ## Monorepo
 
