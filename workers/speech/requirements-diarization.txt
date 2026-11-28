@@ -1,3 +1,0 @@
--r requirements.txt
-# Optional adapter; gated weights required. Not yet end-to-end validated in this environment.
-pyannote.audio>=4.0,<5

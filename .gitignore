@@ -12,3 +12,8 @@ outputs/
 node_modules/
 dist/
 *.flac
+
+.turbo/
+.next/
+
+*.tsbuildinfo
